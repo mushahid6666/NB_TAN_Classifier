@@ -2,8 +2,10 @@ from __future__ import division
 import re
 
 Attributelist=[]
-Datalist=[]
+TrainDataSet=[]
 attributeCounter=0
+ComputerWieghts={}
+Mutualinfo={}
 class Attribute():
     name=''
     values=list()
@@ -17,6 +19,7 @@ class Attribute():
         self.values_count = {}
         for value in values:
             self.values_count[value]=[0,0]
+
 
 
 def InputPares():
@@ -39,7 +42,7 @@ def InputPares():
         else:
             line=line.strip()
             line= line.split(',')
-            Datalist.append(line)
+            TrainDataSet.append(line)
             if line[-1]==Attributelist[-1].values[0]:
                 for i in range(len(line)):
                     Attributelist[i].values_count[line[i]][0]+=1
@@ -87,7 +90,62 @@ def NBClassifier():
 
     print(correct_classified,count)
 
+def CalculateConditionalMutualInfo():
+    globals()
+    for Att_I in Attributelist:
+        if Att_I.index==Attributelist[-1].index:
+            continue
+        Mutualinfo[Att_I]={}
+        for Att_J in Attributelist:
+            if Att_J.index==Attributelist[-1].index:
+                continue
+            if Att_I.index==Att_J.index:
+                continue
+            Mutualinfo[Att_I][Att_J]={}
+            for value_I in Att_I.values:
+                Mutualinfo[Att_I][Att_J][value_I]={}
+                for value_J in Att_J.values:
+                    Mutualinfo[Att_I][Att_J][value_I][value_J]=[0,0]
+                    for row in TrainDataSet:
+                        if row[Att_I.index]==value_I and row[Att_J.index]==value_J and row[-1]==Attributelist[-1].values[0]:
+                            Mutualinfo[Att_I][Att_J][value_I][value_J][0]+=1
+                        if row[Att_I.index]==value_I and row[Att_J.index]==value_J and row[-1]==Attributelist[-1].values[1]:
+                            Mutualinfo[Att_I][Att_J][value_I][value_J][1]+=1
+    pass
+
+def get_C_xi_xj_given_y(Att_I,Att_J,y):
+    TotalSum=0
+    for value_I in Att_I.values:
+        for value_J in Att_J.values:
+            TotalSum+=Mutualinfo[Att_I][Att_J][value_I][value_J][y]
+    return TotalSum
+
+def get_C_xi_xj(Att_I,Att_J,y):
+    TotalSum=0
+    for value_I in Att_I.values:
+        for value_J in Att_J.values:
+            TotalSum+=Mutualinfo[Att_I][Att_J][value_I][value_J][y]
+    return TotalSum
+
+def CalculateWeights():
+    globals()
+    CalculateConditionalMutualInfo()
+    C_xi_xj_given_y1=get_C_xi_xj_given_y(Attributelist[0],Attributelist[1],1)
+    print C_xi_xj_given_y1
+    # for Att_I in Attributelist:
+    #     for Att_J in Attributelist:
+    #         if Att_I.name==Att_J.name:
+    #             continue
+    #         C_xi_xj_given_y1=get_C_xi_xj(Att_I,Att_J,0)
+    #         P_xi_xj_given_y1=
+    #         ComputerWieghts[Att_I.name,Att_J.name]=[]
+
+
+
+def TANClassifier():
+    CalculateWeights()
 
 
 InputPares()
 NBClassifier()
+TANClassifier()
