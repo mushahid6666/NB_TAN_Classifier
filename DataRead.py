@@ -1,11 +1,13 @@
 from __future__ import division
 import re
+import math
 
 Attributelist=[]
 TrainDataSet=[]
 attributeCounter=0
 ComputerWieghts={}
 Mutualinfo={}
+Cond_Mutual_Indo={}
 class Attribute():
     name=''
     values=list()
@@ -95,43 +97,83 @@ def CalculateConditionalMutualInfo():
     for Att_I in Attributelist:
         if Att_I.index==Attributelist[-1].index:
             continue
-        Mutualinfo[Att_I]={}
+        Mutualinfo[Att_I.index]={}
         for Att_J in Attributelist:
             if Att_J.index==Attributelist[-1].index:
                 continue
             if Att_I.index==Att_J.index:
                 continue
-            Mutualinfo[Att_I][Att_J]={}
+            Mutualinfo[Att_I.index][Att_J.index]={}
             for value_I in Att_I.values:
-                Mutualinfo[Att_I][Att_J][value_I]={}
+                Mutualinfo[Att_I.index][Att_J.index][value_I]={}
                 for value_J in Att_J.values:
-                    Mutualinfo[Att_I][Att_J][value_I][value_J]=[0,0]
+                    Mutualinfo[Att_I.index][Att_J.index][value_I][value_J]=[0,0]
                     for row in TrainDataSet:
                         if row[Att_I.index]==value_I and row[Att_J.index]==value_J and row[-1]==Attributelist[-1].values[0]:
-                            Mutualinfo[Att_I][Att_J][value_I][value_J][0]+=1
+                            Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][0]+=1
                         if row[Att_I.index]==value_I and row[Att_J.index]==value_J and row[-1]==Attributelist[-1].values[1]:
-                            Mutualinfo[Att_I][Att_J][value_I][value_J][1]+=1
+                            Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][1]+=1
     pass
 
-def get_C_xi_xj_given_y(Att_I,Att_J,y):
-    TotalSum=0
-    for value_I in Att_I.values:
-        for value_J in Att_J.values:
-            TotalSum+=Mutualinfo[Att_I][Att_J][value_I][value_J][y]
-    return TotalSum
+def get_C_xi_xj_given_y(Att_I,value_I,Att_J,value_J,y):
+    return Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][y]
 
-def get_C_xi_xj(Att_I,Att_J,y):
-    TotalSum=0
-    for value_I in Att_I.values:
-        for value_J in Att_J.values:
-            TotalSum+=Mutualinfo[Att_I][Att_J][value_I][value_J][y]
-    return TotalSum
+def get_C_xi_xj(Att_I,value_I,Att_J,value_J):
+    return Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][0]+Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][1]
+
+def Prob(Numerator,Denomenator):
+    return float(Numerator)/Denomenator
+
+def get_Prob_xi_y(Att_I,value_I,y):
+    no_of_y1=Attributelist[-1].values_count[Attributelist[-1].values[0]][0]
+    no_of_y2=Attributelist[-1].values_count[Attributelist[-1].values[1]][1]
+    if y==0:
+        CT_I_Values=len(Att_I.values)
+        CT_I_given_Y=Att_I.values_count[value_I][0]
+        Prob_xi_given_y1=Prob((CT_I_given_Y+1),(no_of_y1+CT_I_Values))
+    else:
+        CT_I_Values=len(Att_I.values)
+        CT_I_given_Y=Att_I.values_count[value_I][1]
+        Prob_xi_given_y1=Prob((CT_I_given_Y+1),(no_of_y2+CT_I_Values))
+    return Prob_xi_given_y1
 
 def CalculateWeights():
     globals()
     CalculateConditionalMutualInfo()
-    C_xi_xj_given_y1=get_C_xi_xj_given_y(Attributelist[0],Attributelist[1],1)
-    print C_xi_xj_given_y1
+    no_of_y1=Attributelist[-1].values_count[Attributelist[-1].values[0]][0]
+    no_of_y2=Attributelist[-1].values_count[Attributelist[-1].values[1]][1]
+    Cond_mutual_info_xi_xj = 0
+    for Att_I in Attributelist:
+        if Att_I.index == Attributelist[-1].index:
+            continue
+        for Att_J in Attributelist:
+            if Att_J.index==Attributelist[-1].index or Att_I.index==Att_J.index:
+                continue
+            for value_I in Att_I.values:
+                for value_J in Att_J.values:
+                    C_xi_xj_given_y1=get_C_xi_xj_given_y(Att_I,value_I,Att_J,value_J,0)
+                    Prob_xi_xj_given_y1=Prob(C_xi_xj_given_y1+1,(no_of_y1+(len(Att_I.values)*len(Att_J.values))))
+                    Prob_xi_xj_y1=Prob(C_xi_xj_given_y1+1,(no_of_y1+no_of_y2+(len(Att_I.values)*len(Att_J.values)*2)))
+
+
+                    C_xi_xj_given_y2=get_C_xi_xj_given_y(Att_I,value_I,Att_J,value_J,1)
+                    Prob_xi_xj_given_y2=Prob(C_xi_xj_given_y2+1,(no_of_y2+(len(Att_I.values)*len(Att_J.values))))
+                    Prob_xi_xj_y2=Prob(C_xi_xj_given_y2+1,(no_of_y1+no_of_y2+(len(Att_I.values)*len(Att_J.values)*2)))
+
+
+                    Prob_xi_given_y1=get_Prob_xi_y(Att_I,value_I,0)
+                    Prob_xi_given_y2=get_Prob_xi_y(Att_I,value_I,1)
+                    Prob_xj_given_y1=get_Prob_xi_y(Att_J,value_J,0)
+                    Prob_xj_given_y2=get_Prob_xi_y(Att_J,value_J,1)
+
+                    Cond_mutual_info_xi_xj_y1=Prob_xi_xj_y1*math.log(float(Prob_xi_xj_given_y1)/(Prob_xi_given_y1*Prob_xj_given_y1),2)
+                    Cond_mutual_info_xi_xj_y2=Prob_xi_xj_y2*math.log(float(Prob_xi_xj_given_y2)/(Prob_xi_given_y2*Prob_xj_given_y2),2)
+
+                    Cond_mutual_info_xi_xj+=Cond_mutual_info_xi_xj_y1+Cond_mutual_info_xi_xj_y2
+            key=Att_I.Name+","+Att_J.Name
+            Cond_Mutual_Indo[key]=Cond_mutual_info_xi_xj
+            Cond_mutual_info_xi_xj=0
+
     # for Att_I in Attributelist:
     #     for Att_J in Attributelist:
     #         if Att_I.name==Att_J.name:
