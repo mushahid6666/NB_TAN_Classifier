@@ -297,8 +297,8 @@ def TANClassifier():
                     Px_y_dash*=(CT_Y+1)/(C_Y + len(Attr_data[i].values))
             result2=Px_y_dash*PY
 
-            final_result1=float(result1)/float(result1+result2)
-            final_result2=float(result2)/float(result1+result2)
+            final_result1=Prob((result1),(result1+result2))
+            final_result2=Prob((result2),(result1+result2))
             if final_result1>final_result2:
                 if line[-1]==Attr_data[-1].values[0]:
                     correct_classified+=1
