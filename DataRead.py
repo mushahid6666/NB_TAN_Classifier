@@ -283,7 +283,7 @@ def TANClassifier():
                     Px_y*=CondProbTable[key1]
                 else:
                     CT_Y=Attr_data[i].values_count[line[i]][0]
-                    Px_y*=(CT_Y+1)/(C_Y + len(Attr_data[i].values))
+                    Px_y*=(CT_Y+1)/(C_X + len(Attr_data[i].values))
             result1=Px_y*PX
 
             for i in range(len(line)-1):
@@ -302,11 +302,11 @@ def TANClassifier():
             if final_result1>final_result2:
                 if line[-1]==Attr_data[-1].values[0]:
                     correct_classified+=1
-                print(y1,line[-1],final_result1)
+                print(y1,line[-1],"%.12f"%final_result1)
             else:
                 if line[-1]==Attr_data[-1].values[1]:
                     correct_classified+=1
-                print(y2,line[-1],final_result2)
+                print(y2,line[-1],"%.12f"%final_result2)
 
     print correct_classified,count
 
