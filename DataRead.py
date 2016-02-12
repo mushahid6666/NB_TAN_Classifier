@@ -1,7 +1,10 @@
 from __future__ import division
 import re
-import math
+import matplotlib
+import random
 
+
+randlist = list()
 nodes_data = list()
 edges_data = list()
 parents_data = dict()
@@ -28,12 +31,22 @@ class Attribute():
 
 
 
-def InputPares():
-    globals()
-    finput= open('lymph_train.arff','r')
+def InputPares(filename):
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
+    global CondProbTable
+    finput= open(filename,'r')
     # lines = [line.rstrip('\n') for line in finput]
+    count = 1;
     for line in finput:
-        testlist=[1,2,3,4]
         line=line.rstrip('\n')
         if line.startswith('@attribute'):
             templist =  line.split(' ')
@@ -44,21 +57,34 @@ def InputPares():
             newatr = Attribute(templist[1],newlist)
             Attr_data.append(newatr)
         if line.startswith('@attribute') or line.startswith('@relation') or line.startswith('%') or line.startswith('@data'):
+            count+=1
             continue
         else:
-            line=line.strip()
-            line= line.split(',')
-            TrainDataSet.append(line)
-            if line[-1]==Attr_data[-1].values[0]:
-                for i in range(len(line)):
-                    Attr_data[i].values_count[line[i]][0]+=1
-            else:
-                for i in range(len(line)):
-                    Attr_data[i].values_count[line[i]][1]+=1
-    pass
+            if count in randlist:
+                line=line.strip()
+                line= line.split(',')
+                TrainDataSet.append(line)
+                if line[-1]==Attr_data[-1].values[0]:
+                    for i in range(len(line)):
+                        Attr_data[i].values_count[line[i]][0]+=1
+                else:
+                    for i in range(len(line)):
+                        Attr_data[i].values_count[line[i]][1]+=1
+            count+=1
 
-def NBClassifier():
-    testinput= open('lymph_test.arff','r')
+def NBClassifier(TestFile):
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
+    global CondProbTable
+    testinput= open(TestFile,'r')
     correct_classified=0
     C_X=Attr_data[-1].values_count[Attr_data[-1].values[0]][0]
     C_Y=Attr_data[-1].values_count[Attr_data[-1].values[1]][1]
@@ -97,7 +123,17 @@ def NBClassifier():
     print(correct_classified,count)
 
 def CalculateConditionalMutualInfo():
-    globals()
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
+    global CondProbTable
     for Att_I in Attr_data:
         if Att_I.index==Attr_data[-1].index:
             continue
@@ -120,15 +156,19 @@ def CalculateConditionalMutualInfo():
     pass
 
 def get_C_xi_xj_given_y(Att_I,value_I,Att_J,value_J,y):
+    global Mutualinfo
+
     return Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][y]
 
 def get_C_xi_xj(Att_I,value_I,Att_J,value_J):
+    global Mutualinfo
     return Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][0]+Mutualinfo[Att_I.index][Att_J.index][value_I][value_J][1]
 
 def Prob(Numerator,Denomenator):
     return float(Numerator)/Denomenator
 
 def get_Prob_xi_y(Att_I,value_I,y):
+    global Attr_data
     no_of_y1=Attr_data[-1].values_count[Attr_data[-1].values[0]][0]
     no_of_y2=Attr_data[-1].values_count[Attr_data[-1].values[1]][1]
     if y==0:
@@ -142,7 +182,16 @@ def get_Prob_xi_y(Att_I,value_I,y):
     return Prob_xi_given_y1
 
 def CalculateWeights():
-    globals()
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
     CalculateConditionalMutualInfo()
     no_of_y1=Attr_data[-1].values_count[Attr_data[-1].values[0]][0]
     no_of_y2=Attr_data[-1].values_count[Attr_data[-1].values[1]][1]
@@ -189,18 +238,28 @@ def cmp_items(a, b):
     if a[0]> b[0]:
         return -1
     elif a[0] == b[0]:
-        if a[1].index == b[1].index:
+        if a[1].index < b[1].index:
+            return -1
+        elif a[1].index == b[1].index:
             if a[2].index < b[2].index:
                 return -1
             else:
                 return 1
-        elif a[1].index < b[1].index:
-            return -1
         else:
             return 1
     else:
         return 1
+
 def getMaxWtEdge(nodes_data):
+    global randlist
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
     weights=list()
     for node in nodes_data:
         for Attr in Attr_data:
@@ -214,7 +273,16 @@ def getMaxWtEdge(nodes_data):
         return weights[0]
 
 def PrimsAlgo():
-    globals()
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
     nodes_data.append(Attr_data[0])
     while(len(nodes_data)<len(Attr_data)-1):
         maxEdge = getMaxWtEdge(nodes_data)
@@ -230,7 +298,16 @@ def PrimsAlgo():
             print Attribute.name+" class"
 
 def ConditionalProbilityTable():
-    globals()
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
     y1=Attr_data[-1].values[0]
     y2=Attr_data[-1].values[1]
     for attr_I in Attr_data:
@@ -253,7 +330,16 @@ def ConditionalProbilityTable():
 
 
 def TANClassifier():
-    globals()
+    global randlist
+    global nodes_data
+    global edges_data
+    global parents_data
+    global Attr_data
+    global TrainDataSet
+    global attributeCounter
+    global ComputerWieghts
+    global Mutualinfo
+    global Cond_Mutual_Info
     CalculateWeights()
     PrimsAlgo()
     ConditionalProbilityTable()
@@ -271,6 +357,7 @@ def TANClassifier():
         if line.startswith('@attribute') or line.startswith('@relation') or line.startswith('%') or line.startswith('@data') or line.startswith('@attribute'):
             continue
         else:
+            count+=1
             line=line.strip()
             line= line.split(',')
             Px_y=1.0
@@ -307,11 +394,20 @@ def TANClassifier():
                 if line[-1]==Attr_data[-1].values[1]:
                     correct_classified+=1
                 print(y2,line[-1],"%.12f"%final_result2)
-
     print correct_classified,count
 
+def LCurve(TrainFile,TestFile):
+    global randlist
+    randlist=[0]*100
+    for i in range(1,100):
+        randlist[i-1]=i
+    randlist = random.sample(randlist,25)
+    InputPares(TrainFile)
+    NBClassifier(TestFile)
 
-
-InputPares()
-# NBClassifier()
-TANClassifier()
+TrainFile = "lymph_train.arff"
+TestFile = "lymph_test.arff"
+# InputPares(TrainFile)
+# # NBClassifier()
+# TANClassifier()
+LCurve(TrainFile,TestFile)

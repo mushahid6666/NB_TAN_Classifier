@@ -1,4 +1,4 @@
-__author__ = 'mushahidalam'
+
 import math
 import sys
 import random
