@@ -2,6 +2,9 @@ from __future__ import division
 import re
 import matplotlib
 import random
+import math
+from scipy.io import arff
+import weka.core.converters as converters
 
 
 randlist = list()
@@ -43,6 +46,7 @@ def InputPares(filename):
     global Mutualinfo
     global Cond_Mutual_Info
     global CondProbTable
+
     finput= open(filename,'r')
     # lines = [line.rstrip('\n') for line in finput]
     count = 1;
@@ -51,26 +55,29 @@ def InputPares(filename):
         if line.startswith('@attribute'):
             templist =  line.split(' ')
             values = re.findall(r'\{([^]]*)\}',line)
-            newlist=values[0].strip("'").split(",")
+            newlist=values[0].split(",")
             newlist = [each.strip() for each in newlist]
-            templist[1]=templist[1].replace('\\','').replace("'",'')
+            newlist = [each.strip("'") for each in newlist]
+            # templist[1]=templist[1].replace('\\','').replace("'",'')
+            templist[1]=templist[1].strip()
             newatr = Attribute(templist[1],newlist)
             Attr_data.append(newatr)
         if line.startswith('@attribute') or line.startswith('@relation') or line.startswith('%') or line.startswith('@data'):
-            count+=1
             continue
         else:
-            if count in randlist:
-                line=line.strip()
-                line= line.split(',')
-                TrainDataSet.append(line)
-                if line[-1]==Attr_data[-1].values[0]:
-                    for i in range(len(line)):
-                        Attr_data[i].values_count[line[i]][0]+=1
-                else:
-                    for i in range(len(line)):
-                        Attr_data[i].values_count[line[i]][1]+=1
-            count+=1
+            # if count in randlist:
+            line=line.strip()
+            line= line.split(',')
+            line = [each.strip() for each in line]
+            line = [each.strip("'") for each in line]
+            TrainDataSet.append(line)
+            if line[-1]==Attr_data[-1].values[0]:
+                for i in range(len(line)):
+                    Attr_data[i].values_count[line[i]][0]+=1
+            else:
+                for i in range(len(line)):
+                    Attr_data[i].values_count[line[i]][1]+=1
+            # count+=1
 
 def NBClassifier(TestFile):
     global randlist
@@ -84,6 +91,10 @@ def NBClassifier(TestFile):
     global Mutualinfo
     global Cond_Mutual_Info
     global CondProbTable
+    y1=Attr_data[-1].values[0]
+    y2=Attr_data[-1].values[1]
+    y1.strip("'")
+    y2.strip("'")
     testinput= open(TestFile,'r')
     correct_classified=0
     C_X=Attr_data[-1].values_count[Attr_data[-1].values[0]][0]
@@ -99,6 +110,9 @@ def NBClassifier(TestFile):
             count+=1
             line=line.strip()
             line= line.split(',')
+            line = [each.strip() for each in line]
+            line = [each.strip("'") for each in line]
+
             Px_y=1.0
             Px_y_dash=1.0
             for i in range(len(line)-1):
@@ -114,11 +128,15 @@ def NBClassifier(TestFile):
             if final_result1>final_result2:
                 if line[-1]==Attr_data[-1].values[0]:
                     correct_classified+=1
-                print(final_result1)
+                temp = line[-1]
+                temp = temp.strip("'")
+                print y1,temp,"%.12f"%final_result1
             else:
                 if line[-1]==Attr_data[-1].values[1]:
                     correct_classified+=1
-                print(final_result2)
+                temp = line[-1]
+                temp = temp.strip("'")
+                print y2,line[-1],"%.12f"%final_result2
 
     print(correct_classified,count)
 
@@ -293,7 +311,11 @@ def PrimsAlgo():
         if Attribute.index==Attr_data[-1].index:
             continue
         if parents_data.has_key(Attribute.name):
-            print Attribute.name+" "+ parents_data[Attribute.name].name+" class"
+            temp = Attribute.name
+            temp.strip()
+            temp.strip("'")
+            print temp
+            print temp+" "+ parents_data[Attribute.name].name+" class"
         else:
             print Attribute.name+" class"
 
@@ -329,7 +351,7 @@ def ConditionalProbilityTable():
 
 
 
-def TANClassifier():
+def TANClassifier(TestFile):
     global randlist
     global nodes_data
     global edges_data
@@ -343,7 +365,7 @@ def TANClassifier():
     CalculateWeights()
     PrimsAlgo()
     ConditionalProbilityTable()
-    testinput= open('lymph_test.arff','r')
+    testinput= open(TestFile,'r')
     correct_classified=0
     C_X=Attr_data[-1].values_count[Attr_data[-1].values[0]][0]
     C_Y=Attr_data[-1].values_count[Attr_data[-1].values[1]][1]
@@ -360,6 +382,8 @@ def TANClassifier():
             count+=1
             line=line.strip()
             line= line.split(',')
+            line = [each.strip() for each in line]
+            line = [each.strip("'") for each in line]
             Px_y=1.0
             Px_y_dash=1.0
             for i in range(len(line)-1):
@@ -389,25 +413,34 @@ def TANClassifier():
             if final_result1>final_result2:
                 if line[-1]==Attr_data[-1].values[0]:
                     correct_classified+=1
-                print(y1,line[-1],"%.12f"%final_result1)
+                temp = line[-1]
+                temp = temp.strip("'")
+                print y1,temp,"%.12f"%final_result1
             else:
                 if line[-1]==Attr_data[-1].values[1]:
                     correct_classified+=1
-                print(y2,line[-1],"%.12f"%final_result2)
+                temp = line[-1]
+                temp = temp.strip("'")
+                print y2,temp,"%.12f"%final_result2
     print correct_classified,count
 
 def LCurve(TrainFile,TestFile):
     global randlist
-    randlist=[0]*100
-    for i in range(1,100):
-        randlist[i-1]=i
-    randlist = random.sample(randlist,25)
+    # randlist=[0]*100
+    # for i in range(1,101):
+    #     randlist[i-1]=i
+    # randlist = random.sample(randlist,25)
     InputPares(TrainFile)
-    NBClassifier(TestFile)
+    # NBClassifier(TestFile)
+    TANClassifier(TestFile)
 
-TrainFile = "lymph_train.arff"
-TestFile = "lymph_test.arff"
+TrainFile = "vote_train.arff"
+TestFile = "vote_test.arff"
 # InputPares(TrainFile)
-# # NBClassifier()
+# NBClassifier(TestFile)
 # TANClassifier()
+# data_dir="/u/m/u/mushahid/PycharmProjects/NB_TAN_Classifier/"
+# data= converters.load_any_file(data_dir+TestFile)
+# data.class_is_last()
+# print data
 LCurve(TrainFile,TestFile)

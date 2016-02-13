@@ -353,9 +353,9 @@ def main():
     # trainingSet = sys.argv[1]
     # testSet = sys.argv[2]
     # learningType = sys.argv[3]
-    trainingSet = "lymph_train.arff"
-    testSet = "lymph_test.arff"
-    learningType="t"
+    trainingSet = "vote_train.arff"
+    testSet = "vote_test.arff"
+    learningType="n"
     data = readArff(trainingSet)
     test_data = readTestArff(testSet)
     if(learningType == "n"):
