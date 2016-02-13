@@ -5,6 +5,7 @@ import random
 import math
 from scipy.io import arff
 import weka.core.converters as converters
+import sys
 
 
 randlist = list()
@@ -65,19 +66,20 @@ def InputPares(filename):
         if line.startswith('@attribute') or line.startswith('@relation') or line.startswith('%') or line.startswith('@data'):
             continue
         else:
-            # if count in randlist:
-            line=line.strip()
-            line= line.split(',')
-            line = [each.strip() for each in line]
-            line = [each.strip("'") for each in line]
-            TrainDataSet.append(line)
-            if line[-1]==Attr_data[-1].values[0]:
-                for i in range(len(line)):
-                    Attr_data[i].values_count[line[i]][0]+=1
-            else:
-                for i in range(len(line)):
-                    Attr_data[i].values_count[line[i]][1]+=1
-            # count+=1
+            if count in randlist:
+                print count
+                line=line.strip()
+                line= line.split(',')
+                line = [each.strip() for each in line]
+                line = [each.strip("'") for each in line]
+                TrainDataSet.append(line)
+                if line[-1]==Attr_data[-1].values[0]:
+                    for i in range(len(line)):
+                        Attr_data[i].values_count[line[i]][0]+=1
+                else:
+                    for i in range(len(line)):
+                        Attr_data[i].values_count[line[i]][1]+=1
+            count+=1
 
 def NBClassifier(TestFile):
     global randlist
@@ -426,16 +428,17 @@ def TANClassifier(TestFile):
 
 def LCurve(TrainFile,TestFile):
     global randlist
-    # randlist=[0]*100
-    # for i in range(1,101):
-    #     randlist[i-1]=i
-    # randlist = random.sample(randlist,25)
+    randlist=[0]*100
+    for i in range(1,101):
+        randlist[i-1]=i
+    randlist = random.sample(randlist,100)
+    print randlist
     InputPares(TrainFile)
     # NBClassifier(TestFile)
     TANClassifier(TestFile)
 
-TrainFile = "vote_train.arff"
-TestFile = "vote_test.arff"
+# TrainFile = "lymph_train.arff"
+# TestFile = "lymph_test.arff"
 # InputPares(TrainFile)
 # NBClassifier(TestFile)
 # TANClassifier()
@@ -443,4 +446,18 @@ TestFile = "vote_test.arff"
 # data= converters.load_any_file(data_dir+TestFile)
 # data.class_is_last()
 # print data
-LCurve(TrainFile,TestFile)
+# LCurve(TrainFile,TestFile)
+
+def main():
+    TrainFile = sys.argv[1]
+    TestFile = sys.argv[2]
+    Classifier = sys.argv[3]
+    InputPares(TrainFile)
+    if Classifier=="n":
+        NBClassifier(TestFile)
+    elif Classifier=="t":
+        TANClassifier(TestFile)
+    else:
+        print "Usage: bayes <Train.arff> <Test.arff> <n|t>"
+
+main()
