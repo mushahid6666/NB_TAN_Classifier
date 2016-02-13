@@ -6,6 +6,7 @@ import math
 from scipy.io import arff
 import weka.core.converters as converters
 import sys
+from matplotlib import pyplot
 
 
 randlist = list()
@@ -35,7 +36,7 @@ class Attribute():
 
 
 
-def InputPares(filename):
+def InputPares(filename,Lerning_Curve):
     global randlist
     global nodes_data
     global edges_data
@@ -48,7 +49,10 @@ def InputPares(filename):
     global Cond_Mutual_Info
     global CondProbTable
 
-    finput= open(filename,'r')
+    try:
+        finput= open(filename,'r')
+    except Exception as e:
+        print "Error"+e
     # lines = [line.rstrip('\n') for line in finput]
     count = 1;
     for line in finput:
@@ -66,8 +70,21 @@ def InputPares(filename):
         if line.startswith('@attribute') or line.startswith('@relation') or line.startswith('%') or line.startswith('@data'):
             continue
         else:
-            if count in randlist:
-                print count
+            if Lerning_Curve==1:
+                if count in randlist:
+                    line=line.strip()
+                    line= line.split(',')
+                    line = [each.strip() for each in line]
+                    line = [each.strip("'") for each in line]
+                    TrainDataSet.append(line)
+                    if line[-1]==Attr_data[-1].values[0]:
+                        for i in range(len(line)):
+                            Attr_data[i].values_count[line[i]][0]+=1
+                    else:
+                        for i in range(len(line)):
+                            Attr_data[i].values_count[line[i]][1]+=1
+                count+=1
+            else:
                 line=line.strip()
                 line= line.split(',')
                 line = [each.strip() for each in line]
@@ -79,7 +96,7 @@ def InputPares(filename):
                 else:
                     for i in range(len(line)):
                         Attr_data[i].values_count[line[i]][1]+=1
-            count+=1
+
 
 def NBClassifier(TestFile):
     global randlist
@@ -93,6 +110,10 @@ def NBClassifier(TestFile):
     global Mutualinfo
     global Cond_Mutual_Info
     global CondProbTable
+    for i in range(len(Attr_data)-1):
+        printAttr = Attr_data[i]
+        print printAttr.name.strip("'"),
+        print "class"
     y1=Attr_data[-1].values[0]
     y2=Attr_data[-1].values[1]
     y1.strip("'")
@@ -139,8 +160,8 @@ def NBClassifier(TestFile):
                 temp = line[-1]
                 temp = temp.strip("'")
                 print y2,line[-1],"%.12f"%final_result2
-
-    print(correct_classified,count)
+    print
+    print correct_classified
 
 def CalculateConditionalMutualInfo():
     global randlist
@@ -313,13 +334,10 @@ def PrimsAlgo():
         if Attribute.index==Attr_data[-1].index:
             continue
         if parents_data.has_key(Attribute.name):
-            temp = Attribute.name
-            temp.strip()
-            temp.strip("'")
-            print temp
-            print temp+" "+ parents_data[Attribute.name].name+" class"
+            print Attribute.name.strip("'")+" "+ parents_data[Attribute.name].name.strip("'")+" class"
         else:
-            print Attribute.name+" class"
+            print Attribute.name.strip("'")+" class"
+    print
 
 def ConditionalProbilityTable():
     global randlist
@@ -424,7 +442,8 @@ def TANClassifier(TestFile):
                 temp = line[-1]
                 temp = temp.strip("'")
                 print y2,temp,"%.12f"%final_result2
-    print correct_classified,count
+    print
+    print correct_classified
 
 def LCurve(TrainFile,TestFile):
     global randlist
@@ -433,7 +452,7 @@ def LCurve(TrainFile,TestFile):
         randlist[i-1]=i
     randlist = random.sample(randlist,100)
     print randlist
-    InputPares(TrainFile)
+    InputPares(TrainFile,1)
     # NBClassifier(TestFile)
     TANClassifier(TestFile)
 
@@ -452,7 +471,11 @@ def main():
     TrainFile = sys.argv[1]
     TestFile = sys.argv[2]
     Classifier = sys.argv[3]
-    InputPares(TrainFile)
+    # TrainFile = "lymph_train.arff"
+    # TestFile = "lymph_test.arff"
+    # Classifier="n"
+    InputPares(TrainFile,0)
+    # print TrainFile,TestFile
     if Classifier=="n":
         NBClassifier(TestFile)
     elif Classifier=="t":
